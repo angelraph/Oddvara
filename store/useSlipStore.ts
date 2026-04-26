@@ -39,6 +39,27 @@ async function runConversion(slip: ParsedSlip, targetPlatforms: Platform[]): Pro
   return data.conversions;
 }
 
+// Tries to fetch real selections from the platform's API (e.g. SportyBet sharecode endpoint)
+async function tryDecodeBookingCode(
+  platform: Platform,
+  code: string
+): Promise<{ selections: ParsedSlip['selections']; totalOdds: number } | null> {
+  try {
+    const res = await fetch('/api/decode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform, code }),
+    });
+    const data = await res.json();
+    if (data.success && data.selections?.length > 0) {
+      return { selections: data.selections, totalOdds: data.totalOdds ?? 0 };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export const useSlipStore = create<SlipStore>()(
   persist(
     (set, get) => ({
@@ -78,27 +99,35 @@ export const useSlipStore = create<SlipStore>()(
             return;
           }
 
-          const slip: ParsedSlip = parseData.slip;
+          let slip: ParsedSlip = parseData.slip;
 
-          // Booking code detected — show the guide instead of parsing selections
-          if (slip.isBookingCode) {
-            set({ parsedSlip: slip, isParsing: false, isLoading: false, isConverting: false });
-            return;
-          }
-
-          if (slip.selections.length === 0) {
-            set({
-              error: 'Could not extract any selections. Try pasting the full slip text with team names and odds, or upload a clearer screenshot.',
-              isLoading: false,
-              isParsing: false,
-            });
-            return;
+          // For booking codes, try to decode real selections from the platform API
+          if (slip.isBookingCode && slip.sourcePlatform !== 'unknown' && slip.bookingCode) {
+            const decoded = await tryDecodeBookingCode(slip.sourcePlatform, slip.bookingCode);
+            if (decoded) {
+              // Upgrade the slip with real selections — treat it as a parsed slip
+              slip = {
+                ...slip,
+                isBookingCode: false,
+                selections: decoded.selections,
+                totalOdds: decoded.totalOdds,
+              };
+            }
+            // If decode fails, slip remains { isBookingCode: true, selections: [] }
+            // The convert API will still try code-to-code via generateBookingCodes
           }
 
           set({ parsedSlip: slip, isParsing: false, isConverting: true });
 
-          // Exclude the source platform from conversion targets
+          // Always run conversion — for booking codes this triggers generateBookingCodes
+          // For decoded slips this converts real selections
           const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);
+
+          if (targets.length === 0) {
+            set({ isConverting: false, isLoading: false });
+            return;
+          }
+
           const conversions = await runConversion(slip, targets);
           set({ conversions, isConverting: false, isLoading: false });
         } catch {
@@ -112,10 +141,6 @@ export const useSlipStore = create<SlipStore>()(
       },
 
       restoreFromSharedSlip: async (slip) => {
-        if (slip.isBookingCode) {
-          set({ parsedSlip: slip, conversions: null });
-          return;
-        }
         set({ parsedSlip: slip, isConverting: true, error: null, conversions: null });
         try {
           const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);

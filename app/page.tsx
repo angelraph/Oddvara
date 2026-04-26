@@ -9,7 +9,6 @@ import { PlatformOutput } from '@/components/platform/PlatformOutput';
 import { OddsTable } from '@/components/compare/OddsTable';
 import { ShareButton } from '@/components/share/ShareButton';
 import { SlipLoader } from '@/components/share/SlipLoader';
-import { BookingCodeGuide } from '@/components/booking/BookingCodeGuide';
 import { Spinner } from '@/components/ui';
 import { useSlipStore } from '@/store/useSlipStore';
 
@@ -120,25 +119,21 @@ export default function Home() {
             </div>
           )}
 
-          {/* Booking code detected — show guide instead */}
-          {parsedSlip?.isBookingCode && (
-            <BookingCodeGuide slip={parsedSlip} />
+          {/* Directional banner — shown for any parsed slip with a known source */}
+          {parsedSlip && parsedSlip.sourcePlatform !== 'unknown' && (
+            <div className="flex items-center gap-2 text-xs text-ov-muted bg-ov-elevated border border-ov-border rounded-xl px-4 py-2.5 animate-fade-in">
+              <ArrowRight className="w-3.5 h-3.5 text-ov-green flex-shrink-0" />
+              <span>
+                Converting from{' '}
+                <span className="text-ov-text font-semibold capitalize">{parsedSlip.sourcePlatform}</span>
+                {' '}→ all other platforms
+              </span>
+            </div>
           )}
 
-          {/* Normal slip: parsed card + share */}
-          {parsedSlip && !parsedSlip.isBookingCode && (
+          {/* Parsed slip card + share — only for slips with real selections */}
+          {parsedSlip && !parsedSlip.isBookingCode && parsedSlip.selections.length > 0 && (
             <div className="space-y-3">
-              {/* Directional banner */}
-              {parsedSlip.sourcePlatform !== 'unknown' && (
-                <div className="flex items-center gap-2 text-xs text-ov-muted bg-ov-elevated border border-ov-border rounded-xl px-4 py-2.5">
-                  <ArrowRight className="w-3.5 h-3.5 text-ov-green flex-shrink-0" />
-                  <span>
-                    Converting from{' '}
-                    <span className="text-ov-text font-semibold capitalize">{parsedSlip.sourcePlatform}</span>
-                    {' '}→ all other platforms
-                  </span>
-                </div>
-              )}
               <BetSlipCard slip={parsedSlip} />
               <div className="flex justify-end">
                 <ShareButton slip={parsedSlip} />
@@ -151,8 +146,8 @@ export default function Home() {
             <OddsTable slip={parsedSlip} conversions={conversions} />
           )}
 
-          {/* Platform guides */}
-          {!parsedSlip?.isBookingCode && (conversions || isConverting) && <PlatformOutput />}
+          {/* Platform output — shown for all conversions including booking codes */}
+          {(conversions || isConverting) && <PlatformOutput />}
         </section>
 
         {/* ── How It Works ───────────────────────────────── */}

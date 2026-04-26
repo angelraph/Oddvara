@@ -62,11 +62,13 @@ export interface PlatformSlip {
   platformName: string;
   logoColor: string;
   platformUrl: string;
+  affiliateUrl: string;
   selections: ConvertedSelection[];
   deepLink?: string;
   bookingGuide: BookingStep[];
   overallConfidence: number;
   estimatedTotalOdds?: number;
+  adjustedTotalOdds?: number;
   canAutoLink: boolean;
   bookingCodeInstruction: string;
   bookingCode: string | null;
