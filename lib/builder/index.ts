@@ -1,0 +1,1 @@
+export { convertSlip } from './platforms';
