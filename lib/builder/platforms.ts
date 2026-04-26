@@ -9,27 +9,6 @@ import type {
 import { getMarketByCode } from '@/data/marketMappings';
 import { buildSearchQuery } from '@/lib/normalizer';
 
-function slipHash(slip: ParsedSlip): number {
-  const seed = slip.selections.map((s) => s.homeTeamNormalized + s.awayTeamNormalized + s.odds).join('|');
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function generateMockCode(platform: Platform, slip: ParsedSlip): string {
-  const n = slipHash(slip);
-  const base36 = n.toString(36).toUpperCase().padStart(8, '0');
-  switch (platform) {
-    case 'bet9ja':   return `B9J${base36.slice(0, 6)}`;
-    case 'sportybet': return `SB${base36.slice(0, 6)}`;
-    case '1xbet':    return `1XNG-${base36.slice(0, 4)}-${base36.slice(4, 8)}`;
-    case 'betking':  return `BK${base36.slice(0, 6)}`;
-    default:         return base36.slice(0, 8);
-  }
-}
 
 interface PlatformConfig {
   id: Platform;
@@ -181,7 +160,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
         overallConfidence: 0,
         canAutoLink: false,
         bookingCodeInstruction: '',
-        mockBookingCode: '',
+        bookingCode: null,
       };
     }
 
@@ -224,7 +203,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
       estimatedTotalOdds: parseFloat(estimatedTotalOdds.toFixed(2)),
       canAutoLink: config.canDeepLink,
       bookingCodeInstruction: config.bookingCodeInstruction,
-      mockBookingCode: generateMockCode(platformId, slip),
+      bookingCode: null,
     };
   });
 }

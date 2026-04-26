@@ -50,46 +50,47 @@ export default function Home() {
 
       <main className="relative pt-14">
         {/* ── Hero ──────────────────────────────────────── */}
-        <section className="text-center px-4 pt-16 pb-12">
-          <div className="max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ov-green/10 border border-ov-green/20 text-ov-green text-sm font-medium mb-8">
+        <section className="text-center px-4 pt-14 pb-10">
+          <div className="max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ov-green/10 border border-ov-green/20 text-ov-green text-sm font-medium mb-6">
               <span className="w-2 h-2 rounded-full bg-ov-green animate-pulse-dot" />
-              Convert any bet slip — instantly
+              Instant booking code converter
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-ov-text leading-none mb-5">
-              Rebuild Your Bet
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-ov-text leading-tight mb-4">
+              Paste any bet code.
               <br />
-              <span className="text-ov-green">Anywhere.</span>
+              <span className="text-ov-green">Get codes for every platform.</span>
             </h1>
 
-            <p className="text-ov-muted text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
-              Paste a booking code or bet slip — Oddvara extracts every selection, maps the markets,
-              and rebuilds it for{' '}
-              <strong className="text-ov-text">Bet9ja</strong>,{' '}
+            <p className="text-ov-muted text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-8">
+              Paste a booking code or bet slip → Oddvara extracts every selection and outputs ready-to-use codes for
+              {' '}<strong className="text-ov-text">Bet9ja</strong>,{' '}
               <strong className="text-ov-text">SportyBet</strong>,{' '}
-              <strong className="text-ov-text">1xBet</strong>, or{' '}
+              <strong className="text-ov-text">1xBet</strong> &amp;{' '}
               <strong className="text-ov-text">BetKing</strong>.
             </p>
 
-            {/* Platform Pills */}
-            <div className="flex flex-wrap justify-center gap-2 mb-12">
-              {[
-                { name: 'Bet9ja', color: '#009A44' },
-                { name: 'SportyBet', color: '#E63946' },
-                { name: '1xBet', color: '#1E90FF' },
-                { name: 'BetKing', color: '#FF6B00' },
-              ].map((p) => (
-                <span
-                  key={p.name}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium bg-ov-card"
-                  style={{ borderColor: `${p.color}44`, color: p.color }}
-                >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-                  {p.name}
-                </span>
-              ))}
-            </div>
+            {/* Output preview pills */}
+            {!showResults && (
+              <div className="flex flex-wrap justify-center gap-2 mb-8">
+                {[
+                  { label: 'Bet9ja', code: 'B9J-XXXX', color: '#009A44' },
+                  { label: 'SportyBet', code: 'SB-XXXX', color: '#E63946' },
+                  { label: '1xBet', code: '1XNG-XXXX', color: '#1E90FF' },
+                  { label: 'BetKing', code: 'BK-XXXX', color: '#FF6B00' },
+                ].map((p) => (
+                  <span
+                    key={p.label}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium bg-ov-card"
+                    style={{ borderColor: `${p.color}35`, color: p.color }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.color }} />
+                    {p.label}: <span className="font-mono opacity-60">{p.code}</span>
+                  </span>
+                ))}
+              </div>
+            )}
 
             {!showResults && (
               <ArrowDown className="w-5 h-5 text-ov-faint mx-auto animate-bounce" />

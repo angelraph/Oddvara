@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { ExternalLink, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, List, Search, Copy, Check } from 'lucide-react';
-import { Card, Badge, Divider, ProgressBar, Button } from '@/components/ui';
+import { Card, Badge, Divider, ProgressBar } from '@/components/ui';
 import type { PlatformSlip } from '@/types';
 
 interface PlatformCardProps {
   platform: PlatformSlip;
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, color }: { text: string; color: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -21,26 +21,22 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-ov-elevated border border-ov-border text-ov-muted hover:text-ov-text hover:border-ov-green/40 transition-all duration-150"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-150 flex-shrink-0"
+      style={
+        copied
+          ? { backgroundColor: '#16a34a22', borderColor: '#16a34a60', color: '#4ade80' }
+          : { backgroundColor: 'transparent', borderColor: color + '50', color }
+      }
     >
-      {copied ? (
-        <>
-          <Check className="w-3.5 h-3.5 text-ov-green" />
-          <span className="text-ov-green">Copied!</span>
-        </>
-      ) : (
-        <>
-          <Copy className="w-3.5 h-3.5" />
-          Copy
-        </>
-      )}
+      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? 'Copied!' : 'Copy'}
     </button>
   );
 }
 
 export function PlatformCard({ platform }: PlatformCardProps) {
   const [view, setView] = useState<'guide' | 'selections'>('guide');
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const confColorClass =
     platform.overallConfidence >= 80 ? 'bg-ov-green' : platform.overallConfidence >= 50 ? 'bg-ov-amber' : 'bg-ov-red';
@@ -49,8 +45,7 @@ export function PlatformCard({ platform }: PlatformCardProps) {
     platform.overallConfidence >= 80 ? 'green' : platform.overallConfidence >= 50 ? 'amber' : 'red';
 
   return (
-    <Card className="overflow-hidden animate-slide-up">
-      {/* Coloured top strip */}
+    <Card className="overflow-hidden">
       <div className="h-0.5 w-full" style={{ backgroundColor: platform.logoColor }} />
 
       {/* Platform Header */}
@@ -59,7 +54,7 @@ export function PlatformCard({ platform }: PlatformCardProps) {
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm"
-              style={{ backgroundColor: platform.logoColor + '22', border: `1px solid ${platform.logoColor}44` }}
+              style={{ backgroundColor: platform.logoColor + '18', border: `1px solid ${platform.logoColor}35` }}
             >
               <span style={{ color: platform.logoColor }}>{platform.platformName.charAt(0)}</span>
             </div>
@@ -84,37 +79,20 @@ export function PlatformCard({ platform }: PlatformCardProps) {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* ── Booking Code Hero ── always visible even when collapsed */}
-      <div className="px-5 pb-4">
-        <div
-          className="rounded-xl border px-4 py-3"
-          style={{ backgroundColor: platform.logoColor + '0d', borderColor: platform.logoColor + '30' }}
-        >
-          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: platform.logoColor }}>
-            Booking Code
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="flex-1 font-mono text-xl font-bold tracking-widest text-ov-text">
-              {platform.mockBookingCode}
+        {/* Booking code inline if available */}
+        {platform.bookingCode && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="font-mono text-lg font-bold tracking-widest text-ov-text flex-1 truncate">
+              {platform.bookingCode}
             </span>
-            <CopyButton text={platform.mockBookingCode} />
-            <a href={platform.platformUrl} target="_blank" rel="noopener noreferrer">
-              <Button size="sm" leftIcon={<ExternalLink className="w-3 h-3" />}>
-                Open
-              </Button>
-            </a>
+            <CopyButton text={platform.bookingCode} color={platform.logoColor} />
           </div>
-          <p className="text-xs text-ov-faint mt-2">
-            Mock code · Rebuild the slip on {platform.platformName} to get a real code
-          </p>
-        </div>
+        )}
       </div>
 
       {expanded && (
         <>
-          {/* Confidence Bar */}
           <div className="px-5 pb-4 border-t border-ov-border pt-3">
             <ProgressBar
               value={platform.overallConfidence}
@@ -123,7 +101,6 @@ export function PlatformCard({ platform }: PlatformCardProps) {
             />
           </div>
 
-          {/* View Toggle */}
           <div className="px-5 pb-3 flex gap-2">
             <button
               onClick={() => setView('guide')}
@@ -147,11 +124,20 @@ export function PlatformCard({ platform }: PlatformCardProps) {
               <Search className="w-3.5 h-3.5" />
               Mapped bets
             </button>
+
+            <a
+              href={platform.platformUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto flex items-center gap-1 text-xs text-ov-muted hover:text-ov-text transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Open
+            </a>
           </div>
 
           <Divider />
 
-          {/* Step-by-step Guide */}
           {view === 'guide' && (
             <div className="px-5 py-4 space-y-4">
               {platform.bookingGuide.map((step, i) => {
@@ -178,7 +164,6 @@ export function PlatformCard({ platform }: PlatformCardProps) {
             </div>
           )}
 
-          {/* Mapped Selections */}
           {view === 'selections' && (
             <div className="divide-y divide-ov-border/50">
               {platform.selections.map((sel) => {
