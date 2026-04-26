@@ -1,9 +1,38 @@
 'use client';
 
-import { Layers, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { Layers, TrendingUp, Copy, Check } from 'lucide-react';
 import { PlatformCard } from './PlatformCard';
 import { useSlipStore } from '@/store/useSlipStore';
 import { Spinner } from '@/components/ui';
+
+function CodePill({ name, code, color }: { name: string; code: string; color: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      title={`Copy ${name} code`}
+      className="flex items-center gap-2 px-3 py-2 rounded-xl border bg-ov-card hover:bg-ov-elevated transition-colors group"
+      style={{ borderColor: color + '30' }}
+    >
+      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+      <span className="text-xs text-ov-muted font-medium">{name}</span>
+      <span className="font-mono text-sm font-bold text-ov-text tracking-wider">{code}</span>
+      {copied ? (
+        <Check className="w-3.5 h-3.5 text-ov-green flex-shrink-0" />
+      ) : (
+        <Copy className="w-3.5 h-3.5 text-ov-faint group-hover:text-ov-muted flex-shrink-0 transition-colors" />
+      )}
+    </button>
+  );
+}
 
 export function PlatformOutput() {
   const { conversions, isConverting, parsedSlip } = useSlipStore();
@@ -22,6 +51,8 @@ export function PlatformOutput() {
   const bestPlatform = conversions.reduce((a, b) =>
     a.overallConfidence >= b.overallConfidence ? a : b
   );
+
+  const sorted = [...conversions].sort((a, b) => b.overallConfidence - a.overallConfidence);
 
   return (
     <div className="space-y-6">
@@ -48,13 +79,31 @@ export function PlatformOutput() {
         </div>
       </div>
 
+      {/* All Codes Quick-Copy Strip */}
+      <div className="bg-ov-surface border border-ov-border rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-semibold text-ov-muted uppercase tracking-wider">
+          All Booking Codes — click to copy
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {sorted.map((p) => (
+            <CodePill
+              key={p.platform}
+              name={p.platformName}
+              code={p.mockBookingCode}
+              color={p.logoColor}
+            />
+          ))}
+        </div>
+        <p className="text-xs text-ov-faint">
+          These are mock codes. Open each platform and rebuild the slip to get a real booking code.
+        </p>
+      </div>
+
       {/* Platform Cards */}
       <div className="grid grid-cols-1 gap-4">
-        {conversions
-          .sort((a, b) => b.overallConfidence - a.overallConfidence)
-          .map((platform) => (
-            <PlatformCard key={platform.platform} platform={platform} />
-          ))}
+        {sorted.map((platform) => (
+          <PlatformCard key={platform.platform} platform={platform} />
+        ))}
       </div>
 
       {/* Disclaimer */}

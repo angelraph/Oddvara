@@ -1,12 +1,41 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, List, Search, Ticket } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, List, Search, Copy, Check } from 'lucide-react';
 import { Card, Badge, Divider, ProgressBar, Button } from '@/components/ui';
 import type { PlatformSlip } from '@/types';
 
 interface PlatformCardProps {
   platform: PlatformSlip;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-ov-elevated border border-ov-border text-ov-muted hover:text-ov-text hover:border-ov-green/40 transition-all duration-150"
+    >
+      {copied ? (
+        <>
+          <Check className="w-3.5 h-3.5 text-ov-green" />
+          <span className="text-ov-green">Copied!</span>
+        </>
+      ) : (
+        <>
+          <Copy className="w-3.5 h-3.5" />
+          Copy
+        </>
+      )}
+    </button>
+  );
 }
 
 export function PlatformCard({ platform }: PlatformCardProps) {
@@ -21,12 +50,15 @@ export function PlatformCard({ platform }: PlatformCardProps) {
 
   return (
     <Card className="overflow-hidden animate-slide-up">
+      {/* Coloured top strip */}
+      <div className="h-0.5 w-full" style={{ backgroundColor: platform.logoColor }} />
+
       {/* Platform Header */}
       <div className="px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm"
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm"
               style={{ backgroundColor: platform.logoColor + '22', border: `1px solid ${platform.logoColor}44` }}
             >
               <span style={{ color: platform.logoColor }}>{platform.platformName.charAt(0)}</span>
@@ -34,7 +66,7 @@ export function PlatformCard({ platform }: PlatformCardProps) {
             <div>
               <h3 className="text-ov-text font-bold">{platform.platformName}</h3>
               <p className="text-ov-muted text-xs">
-                {platform.selections.length} selection{platform.selections.length !== 1 ? 's' : ''} •{' '}
+                {platform.selections.length} selection{platform.selections.length !== 1 ? 's' : ''} ·{' '}
                 {platform.estimatedTotalOdds && platform.estimatedTotalOdds > 1
                   ? `~${platform.estimatedTotalOdds.toFixed(2)} odds`
                   : 'odds vary'}
@@ -54,32 +86,36 @@ export function PlatformCard({ platform }: PlatformCardProps) {
         </div>
       </div>
 
-      {expanded && (
-        <>
-          {/* Booking Code CTA */}
-          <div
-            className="mx-5 mt-4 mb-1 rounded-xl px-4 py-3 flex items-start gap-3 border"
-            style={{ backgroundColor: platform.logoColor + '12', borderColor: platform.logoColor + '35' }}
-          >
-            <Ticket className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: platform.logoColor }} />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-ov-text">Get your {platform.platformName} booking code</p>
-              <p className="text-xs text-ov-muted mt-0.5 leading-relaxed">{platform.bookingCodeInstruction}</p>
-            </div>
-            <a
-              href={platform.platformUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0"
-            >
+      {/* ── Booking Code Hero ── always visible even when collapsed */}
+      <div className="px-5 pb-4">
+        <div
+          className="rounded-xl border px-4 py-3"
+          style={{ backgroundColor: platform.logoColor + '0d', borderColor: platform.logoColor + '30' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: platform.logoColor }}>
+            Booking Code
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="flex-1 font-mono text-xl font-bold tracking-widest text-ov-text">
+              {platform.mockBookingCode}
+            </span>
+            <CopyButton text={platform.mockBookingCode} />
+            <a href={platform.platformUrl} target="_blank" rel="noopener noreferrer">
               <Button size="sm" leftIcon={<ExternalLink className="w-3 h-3" />}>
                 Open
               </Button>
             </a>
           </div>
+          <p className="text-xs text-ov-faint mt-2">
+            Mock code · Rebuild the slip on {platform.platformName} to get a real code
+          </p>
+        </div>
+      </div>
 
+      {expanded && (
+        <>
           {/* Confidence Bar */}
-          <div className="px-5 pb-4 border-t border-ov-border pt-3 mt-3">
+          <div className="px-5 pb-4 border-t border-ov-border pt-3">
             <ProgressBar
               value={platform.overallConfidence}
               label="Mapping confidence"
@@ -92,7 +128,9 @@ export function PlatformCard({ platform }: PlatformCardProps) {
             <button
               onClick={() => setView('guide')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                view === 'guide' ? 'bg-ov-elevated text-ov-text border border-ov-border' : 'text-ov-muted hover:text-ov-text'
+                view === 'guide'
+                  ? 'bg-ov-elevated text-ov-text border border-ov-border'
+                  : 'text-ov-muted hover:text-ov-text'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -101,7 +139,9 @@ export function PlatformCard({ platform }: PlatformCardProps) {
             <button
               onClick={() => setView('selections')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                view === 'selections' ? 'bg-ov-elevated text-ov-text border border-ov-border' : 'text-ov-muted hover:text-ov-text'
+                view === 'selections'
+                  ? 'bg-ov-elevated text-ov-text border border-ov-border'
+                  : 'text-ov-muted hover:text-ov-text'
               }`}
             >
               <Search className="w-3.5 h-3.5" />
@@ -115,24 +155,22 @@ export function PlatformCard({ platform }: PlatformCardProps) {
           {view === 'guide' && (
             <div className="px-5 py-4 space-y-4">
               {platform.bookingGuide.map((step, i) => {
-                const isLastStep = i === platform.bookingGuide.length - 1;
+                const isLast = i === platform.bookingGuide.length - 1;
                 return (
                   <div key={step.step} className="flex gap-3">
                     <div
                       className={`flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${
-                        isLastStep
-                          ? 'text-white'
-                          : 'bg-ov-elevated border border-ov-border text-ov-muted'
+                        isLast ? 'text-white' : 'bg-ov-elevated border border-ov-border text-ov-muted'
                       }`}
-                      style={isLastStep ? { backgroundColor: platform.logoColor } : undefined}
+                      style={isLast ? { backgroundColor: platform.logoColor } : undefined}
                     >
                       {step.step}
                     </div>
                     <div>
-                      <p className={`text-sm font-medium ${isLastStep ? 'text-ov-text' : 'text-ov-text'}`}>
-                        {step.instruction}
-                      </p>
-                      {step.detail && <p className="text-ov-muted text-xs mt-0.5 leading-relaxed">{step.detail}</p>}
+                      <p className="text-ov-text text-sm font-medium">{step.instruction}</p>
+                      {step.detail && (
+                        <p className="text-ov-muted text-xs mt-0.5 leading-relaxed">{step.detail}</p>
+                      )}
                     </div>
                   </div>
                 );
@@ -143,10 +181,9 @@ export function PlatformCard({ platform }: PlatformCardProps) {
           {/* Mapped Selections */}
           {view === 'selections' && (
             <div className="divide-y divide-ov-border/50">
-              {platform.selections.map((sel, i) => {
-                const conf = sel.confidence;
+              {platform.selections.map((sel) => {
                 const icon =
-                  conf >= 80 ? (
+                  sel.confidence >= 80 ? (
                     <CheckCircle className="w-4 h-4 text-ov-green flex-shrink-0" />
                   ) : (
                     <AlertTriangle className="w-4 h-4 text-ov-amber flex-shrink-0" />
@@ -158,13 +195,14 @@ export function PlatformCard({ platform }: PlatformCardProps) {
                     <div className="min-w-0 flex-1">
                       <p className="text-ov-text text-sm font-medium truncate">{sel.searchQuery}</p>
                       <p className="text-ov-muted text-xs mt-0.5">
-                        {sel.platformMarket} → <span className="text-ov-text font-medium">{sel.platformSelection}</span>
+                        {sel.platformMarket} →{' '}
+                        <span className="text-ov-text font-medium">{sel.platformSelection}</span>
                         {sel.platformOdds && sel.platformOdds > 0 && (
                           <span className="ml-2 text-ov-green font-mono">{sel.platformOdds.toFixed(2)}</span>
                         )}
                       </p>
                     </div>
-                    <span className="text-xs text-ov-muted flex-shrink-0">{conf}%</span>
+                    <span className="text-xs text-ov-muted flex-shrink-0">{sel.confidence}%</span>
                   </div>
                 );
               })}

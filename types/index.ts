@@ -69,6 +69,7 @@ export interface PlatformSlip {
   estimatedTotalOdds?: number;
   canAutoLink: boolean;
   bookingCodeInstruction: string;
+  mockBookingCode: string;
 }
 
 export interface BookingStep {
