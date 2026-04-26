@@ -38,6 +38,7 @@ export interface ParsedSlip {
   id: string;
   sourcePlatform: Platform;
   bookingCode?: string;
+  isBookingCode?: boolean;
   betType: BetType;
   selections: BetSelection[];
   totalOdds: number;

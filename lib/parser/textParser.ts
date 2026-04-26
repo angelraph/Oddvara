@@ -4,26 +4,86 @@ import { detectPlatformFromText, extractBookingCode, extractOdds, TEAM_VS_TEAM, 
 import { normalizeTeamName } from '@/data/teamMappings';
 import { detectMarketFromText } from '@/data/marketMappings';
 
-function splitIntoChunks(text: string): string[] {
-  // Try numbered items first: "1. ", "2. ", etc.
-  const numbered = text.split(/\n(?=\s*\d+[.)]\s)/);
-  if (numbered.length > 1) return numbered;
+// Lines that mark the end of selections (footer sentinels)
+const FOOTER_SENTINEL = /^(?:total|stake|potential|payout|amount|winning|balance|date|booking|code|slip|ref|ticket|bet\s*id)/i;
 
-  // Try double-newline sections
-  const sections = text.split(/\n\s*\n/).filter((s) => s.trim().length > 10);
-  if (sections.length > 1) return sections;
+const MAX_WINDOW_LINES = 7;
 
-  // Try per-line (for plain-text slips)
-  const lines = text.split('\n').filter((l) => l.trim().length > 5);
-  return lines;
+/**
+ * Groups raw text lines into per-selection windows.
+ *
+ * When a team-vs-team line is found, it opens a new window and
+ * collects the following lines (market, selection, odds) up to
+ * MAX_WINDOW_LINES. This handles SportyBet / 1xBet / Bet9ja formats
+ * where each selection spans multiple lines.
+ *
+ * Falls back to double-newline sections, numbered items, or per-line
+ * if no team patterns are detected.
+ */
+function groupLinesIntoWindows(text: string): string[] {
+  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+  const windows: string[] = [];
+  let current: string[] = [];
+
+  function flush() {
+    if (current.length > 0) {
+      windows.push(current.join('\n'));
+      current = [];
+    }
+  }
+
+  for (const line of lines) {
+    if (FOOTER_SENTINEL.test(line)) {
+      flush();
+      continue;
+    }
+
+    if (TEAM_VS_TEAM.test(line)) {
+      flush();
+      current.push(line);
+      continue;
+    }
+
+    if (current.length > 0) {
+      if (current.length < MAX_WINDOW_LINES) {
+        current.push(line);
+      } else {
+        flush();
+        if (line.length > 5) windows.push(line);
+      }
+      continue;
+    }
+    // Preamble line — no open window, skip
+  }
+
+  flush();
+
+  // Fallback chain when no TEAM_VS_TEAM matches found
+  if (windows.length === 0) {
+    const sections = text.split(/\n\s*\n/).filter((s) => s.trim().length > 10);
+    if (sections.length > 1) return sections;
+
+    const numbered = text.split(/\n(?=\s*\d+[.)]\s)/);
+    if (numbered.length > 1) return numbered;
+
+    return lines.filter((l) => l.length > 5);
+  }
+
+  return windows;
 }
 
 function extractTeams(chunk: string): { home: string; away: string } | null {
-  const match = chunk.match(TEAM_VS_TEAM);
+  // Match only the first line — prevents market/odds text bleeding into team names
+  const firstLine = chunk.split('\n')[0];
+  const match = firstLine.match(TEAM_VS_TEAM);
   if (!match) return null;
 
   const home = match[1].replace(NUMBERED_SELECTION, '').trim();
-  const away = match[2].trim().split('\n')[0].trim();
+  // Strip trailing digits, punctuation, and odds that OCR can attach to team name
+  const away = match[2]
+    .split('\n')[0]
+    .replace(/[\s\d@\.,:\-]+$/, '')
+    .trim();
 
   if (home.length < 2 || away.length < 2) return null;
   return { home, away };
@@ -42,7 +102,6 @@ function extractMarketAndSelection(chunk: string): {
     let selection = 'Unknown';
     let selectionNormalized = 'Unknown';
 
-    // Over/Under — extract line
     if (marketInfo.code === 'OVER_UNDER') {
       const ouMatch = chunk.match(OVER_UNDER_LINE);
       const line = ouMatch ? ouMatch[1] : '2.5';
@@ -58,7 +117,6 @@ function extractMarketAndSelection(chunk: string): {
       };
     }
 
-    // Correct Score
     if (marketInfo.code === 'CORRECT_SCORE') {
       const csMatch = chunk.match(CORRECT_SCORE);
       selection = csMatch ? `${csMatch[1]}-${csMatch[2]}` : 'Unknown';
@@ -66,7 +124,6 @@ function extractMarketAndSelection(chunk: string): {
       return { market: marketInfo.displayName, marketCode: 'CORRECT_SCORE', selection, selectionNormalized };
     }
 
-    // Map selection from aliases
     const lowerChunk = chunk.toLowerCase();
     for (const [alias, normalized] of Object.entries(marketInfo.selectionAliases)) {
       if (lowerChunk.includes(alias.toLowerCase())) {
@@ -76,15 +133,10 @@ function extractMarketAndSelection(chunk: string): {
       }
     }
 
-    return {
-      market: marketInfo.displayName,
-      marketCode: marketInfo.code,
-      selection,
-      selectionNormalized,
-    };
+    return { market: marketInfo.displayName, marketCode: marketInfo.code, selection, selectionNormalized };
   }
 
-  // Default: try to find 1X2 indicator
+  // Fallback: try plain 1X2 indicators
   const match1 = chunk.match(/\b(1|home\s*win|home)\b/i);
   const matchX = chunk.match(/\b(x|draw|tie)\b/i);
   const match2 = chunk.match(/\b(2|away\s*win|away)\b/i);
@@ -102,7 +154,11 @@ function extractMarketAndSelection(chunk: string): {
   return { market: 'Unknown', marketCode: 'UNKNOWN', selection: 'Unknown', selectionNormalized: 'Unknown' };
 }
 
-function scoreConfidence(teams: { home: string; away: string } | null, odds: number | null, marketCode: MarketCode): number {
+function scoreConfidence(
+  teams: { home: string; away: string } | null,
+  odds: number | null,
+  marketCode: MarketCode
+): number {
   let score = 0;
   if (teams) score += 35;
   if (odds !== null && odds >= 1.01) score += 25;
@@ -115,22 +171,19 @@ export function parseSlipText(rawText: string): ParsedSlip {
   const platform = detectPlatformFromText(rawText) as Platform;
   const bookingCode = extractBookingCode(rawText);
 
-  const chunks = splitIntoChunks(rawText);
+  const chunks = groupLinesIntoWindows(rawText);
   const selections: BetSelection[] = [];
 
   for (const chunk of chunks) {
-    const trimmed = chunk.replace(NUMBERED_SELECTION, '').trim();
-
-    // Skip header/footer lines
-    if (/^(?:booking|total|stake|potential|date|platform|code|slip)/i.test(trimmed)) continue;
-    if (trimmed.length < 8) continue;
+    const trimmed = chunk.trim();
+    if (trimmed.length < 5) continue;
 
     const teams = extractTeams(trimmed);
     const odds = extractOdds(trimmed);
     const { market, marketCode, selection, selectionNormalized } = extractMarketAndSelection(trimmed);
     const confidence = scoreConfidence(teams, odds, marketCode);
 
-    // Only include if we have at least teams OR odds + market
+    // Include if we have teams OR (valid odds AND known market)
     if (!teams && (!odds || marketCode === 'UNKNOWN')) continue;
 
     const homeTeam = teams?.home ?? 'Unknown';

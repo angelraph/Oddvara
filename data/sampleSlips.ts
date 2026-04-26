@@ -7,6 +7,27 @@ export interface SampleSlip {
 
 export const SAMPLE_SLIPS: SampleSlip[] = [
   {
+    id: 'sample-sportybet-raw',
+    label: 'SportyBet (Raw Format)',
+    platform: 'sportybet',
+    content: `SportyBet
+
+1 Arsenal v Chelsea
+Full Time Result
+1 @ 2.20
+
+2 Barcelona v Real Madrid
+Total
+Over 2.5 @ 1.85
+
+3 Bayern Munich v Borussia Dortmund
+Both Teams to Score
+Yes @ 1.70
+
+Total Odds: 7.10
+Stake: 1000`,
+  },
+  {
     id: 'sample-sportybet-1',
     label: 'SportyBet Accumulator',
     platform: 'sportybet',

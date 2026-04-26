@@ -6,7 +6,7 @@ import { useSlipStore } from '@/store/useSlipStore';
 import { Spinner } from '@/components/ui';
 
 export function PlatformOutput() {
-  const { conversions, isConverting } = useSlipStore();
+  const { conversions, isConverting, parsedSlip } = useSlipStore();
 
   if (isConverting) {
     return (
@@ -33,7 +33,12 @@ export function PlatformOutput() {
           </div>
           <div>
             <h2 className="text-ov-text font-bold text-base">Platform Conversions</h2>
-            <p className="text-ov-muted text-xs">Best match: {bestPlatform.platformName} ({bestPlatform.overallConfidence}%)</p>
+            <p className="text-ov-muted text-xs">
+              Best match: {bestPlatform.platformName} ({bestPlatform.overallConfidence}%)
+              {parsedSlip?.sourcePlatform && parsedSlip.sourcePlatform !== 'unknown' && (
+                <> · <span className="capitalize">{parsedSlip.sourcePlatform}</span> excluded</>
+              )}
+            </p>
           </div>
         </div>
 

@@ -26,13 +26,13 @@ interface SlipStore {
   deleteSavedSlip: (id: string) => void;
 }
 
-const TARGET_PLATFORMS: Platform[] = ['bet9ja', 'sportybet', '1xbet', 'betking'];
+const ALL_PLATFORMS: Platform[] = ['bet9ja', 'sportybet', '1xbet', 'betking'];
 
-async function runConversion(slip: ParsedSlip): Promise<PlatformSlip[]> {
+async function runConversion(slip: ParsedSlip, targetPlatforms: Platform[]): Promise<PlatformSlip[]> {
   const res = await fetch('/api/convert', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slip, targetPlatforms: TARGET_PLATFORMS }),
+    body: JSON.stringify({ slip, targetPlatforms }),
   });
   const data = await res.json();
   if (!data.success) throw new Error(data.error ?? 'Conversion failed');
@@ -80,9 +80,15 @@ export const useSlipStore = create<SlipStore>()(
 
           const slip: ParsedSlip = parseData.slip;
 
+          // Booking code detected — show the guide instead of parsing selections
+          if (slip.isBookingCode) {
+            set({ parsedSlip: slip, isParsing: false, isLoading: false, isConverting: false });
+            return;
+          }
+
           if (slip.selections.length === 0) {
             set({
-              error: 'Could not extract any selections. Try pasting the full bet slip text with team names and odds.',
+              error: 'Could not extract any selections. Try pasting the full slip text with team names and odds, or upload a clearer screenshot.',
               isLoading: false,
               isParsing: false,
             });
@@ -91,17 +97,29 @@ export const useSlipStore = create<SlipStore>()(
 
           set({ parsedSlip: slip, isParsing: false, isConverting: true });
 
-          const conversions = await runConversion(slip);
+          // Exclude the source platform from conversion targets
+          const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);
+          const conversions = await runConversion(slip, targets);
           set({ conversions, isConverting: false, isLoading: false });
         } catch {
-          set({ error: 'Network error. Please check your connection and try again.', isLoading: false, isParsing: false, isConverting: false });
+          set({
+            error: 'Network error. Please check your connection and try again.',
+            isLoading: false,
+            isParsing: false,
+            isConverting: false,
+          });
         }
       },
 
       restoreFromSharedSlip: async (slip) => {
+        if (slip.isBookingCode) {
+          set({ parsedSlip: slip, conversions: null });
+          return;
+        }
         set({ parsedSlip: slip, isConverting: true, error: null, conversions: null });
         try {
-          const conversions = await runConversion(slip);
+          const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);
+          const conversions = await runConversion(slip, targets);
           set({ conversions, isConverting: false });
         } catch {
           set({ error: 'Could not convert the shared slip.', isConverting: false });

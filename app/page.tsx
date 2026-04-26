@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Zap, ArrowDown, BookOpen, Layers, Shuffle } from 'lucide-react';
+import { Zap, ArrowDown, BookOpen, Layers, Shuffle, ArrowRight } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { InputPanel } from '@/components/input/InputPanel';
 import { BetSlipCard } from '@/components/slip/BetSlipCard';
@@ -9,6 +9,7 @@ import { PlatformOutput } from '@/components/platform/PlatformOutput';
 import { OddsTable } from '@/components/compare/OddsTable';
 import { ShareButton } from '@/components/share/ShareButton';
 import { SlipLoader } from '@/components/share/SlipLoader';
+import { BookingCodeGuide } from '@/components/booking/BookingCodeGuide';
 import { Spinner } from '@/components/ui';
 import { useSlipStore } from '@/store/useSlipStore';
 
@@ -118,9 +119,25 @@ export default function Home() {
             </div>
           )}
 
-          {/* Parsed Slip + share row */}
-          {parsedSlip && (
+          {/* Booking code detected — show guide instead */}
+          {parsedSlip?.isBookingCode && (
+            <BookingCodeGuide slip={parsedSlip} />
+          )}
+
+          {/* Normal slip: parsed card + share */}
+          {parsedSlip && !parsedSlip.isBookingCode && (
             <div className="space-y-3">
+              {/* Directional banner */}
+              {parsedSlip.sourcePlatform !== 'unknown' && (
+                <div className="flex items-center gap-2 text-xs text-ov-muted bg-ov-elevated border border-ov-border rounded-xl px-4 py-2.5">
+                  <ArrowRight className="w-3.5 h-3.5 text-ov-green flex-shrink-0" />
+                  <span>
+                    Converting from{' '}
+                    <span className="text-ov-text font-semibold capitalize">{parsedSlip.sourcePlatform}</span>
+                    {' '}→ all other platforms
+                  </span>
+                </div>
+              )}
               <BetSlipCard slip={parsedSlip} />
               <div className="flex justify-end">
                 <ShareButton slip={parsedSlip} />
@@ -129,12 +146,12 @@ export default function Home() {
           )}
 
           {/* Odds Comparison Table */}
-          {parsedSlip && conversions && conversions.length > 0 && (
+          {parsedSlip && !parsedSlip.isBookingCode && conversions && conversions.length > 0 && (
             <OddsTable slip={parsedSlip} conversions={conversions} />
           )}
 
           {/* Platform guides */}
-          {(conversions || isConverting) && <PlatformOutput />}
+          {!parsedSlip?.isBookingCode && (conversions || isConverting) && <PlatformOutput />}
         </section>
 
         {/* ── How It Works ───────────────────────────────── */}

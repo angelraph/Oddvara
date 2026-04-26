@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback } from 'react';
 import { Hash, FileText, ImageIcon, ArrowRight, RotateCcw, ChevronDown } from 'lucide-react';
+import { cleanOcrText } from '@/lib/parser/ocrCleaner';
 import { Button, Spinner } from '@/components/ui';
 import { useSlipStore } from '@/store/useSlipStore';
 import { SAMPLE_SLIPS } from '@/data/sampleSlips';
@@ -87,7 +88,7 @@ export function InputPanel() {
         });
         const result = await worker.recognize(file);
         await worker.terminate();
-        setInputValue(result.data.text);
+        setInputValue(cleanOcrText(result.data.text));
         setOcrProgress(100);
       } catch {
         setInputValue('OCR failed. Please paste the slip text manually.');
