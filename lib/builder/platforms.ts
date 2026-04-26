@@ -15,7 +15,6 @@ interface PlatformConfig {
   name: string;
   logoColor: string;
   baseUrl: string;
-  affiliateUrl: string;
   searchUrl: string;
   canDeepLink: boolean;
   bookingCodeUrl?: string;
@@ -29,7 +28,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     name: 'Bet9ja',
     logoColor: '#009A44',
     baseUrl: 'https://web.bet9ja.com',
-    affiliateUrl: 'https://web.bet9ja.com/?utm_source=oddvara&utm_medium=referral&utm_campaign=convert',
+
     searchUrl: 'https://web.bet9ja.com/Sport#',
     canDeepLink: false,
     bookingCodeUrl: 'https://web.bet9ja.com/Sport#/booking/',
@@ -41,7 +40,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     name: 'SportyBet',
     logoColor: '#E63946',
     baseUrl: 'https://www.sportybet.com/ng',
-    affiliateUrl: 'https://www.sportybet.com/ng/?utm_source=oddvara&utm_medium=referral&utm_campaign=convert',
+
     searchUrl: 'https://www.sportybet.com/ng/sport/football',
     canDeepLink: false,
     bookingCodeUrl: 'https://www.sportybet.com/ng/sharecode/',
@@ -53,7 +52,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     name: '1xBet',
     logoColor: '#1E90FF',
     baseUrl: 'https://1xbet.ng',
-    affiliateUrl: 'https://1xbet.ng/?utm_source=oddvara&utm_medium=referral&utm_campaign=convert',
+
     searchUrl: 'https://1xbet.ng/en/sport/football',
     canDeepLink: false,
     bookingCodeUrl: 'https://1xbet.ng/en/coupon/',
@@ -65,7 +64,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     name: 'BetKing',
     logoColor: '#FF6B00',
     baseUrl: 'https://www.betking.com',
-    affiliateUrl: 'https://www.betking.com/?utm_source=oddvara&utm_medium=referral&utm_campaign=convert',
+
     searchUrl: 'https://www.betking.com/sports/s#/football/',
     canDeepLink: false,
     bookingCodeUrl: 'https://www.betking.com/booking-code',
@@ -165,7 +164,6 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
         platformName: platformId,
         logoColor: '#666',
         platformUrl: '',
-        affiliateUrl: '',
         selections: [],
         bookingGuide: [],
         overallConfidence: 0,
@@ -209,7 +207,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
       platformName: config.name,
       logoColor: config.logoColor,
       platformUrl: config.baseUrl,
-      affiliateUrl: config.affiliateUrl,
+
       selections: convertedSelections,
       deepLink: config.canDeepLink ? `${config.searchUrl}` : undefined,
       bookingGuide,

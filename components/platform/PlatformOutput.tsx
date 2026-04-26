@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Copy, Check, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { PlatformCard } from './PlatformCard';
-import { BestOddsBar } from './BestOddsBar';
+import { ActivateCodesBar } from './ActivateCodesBar';
 import { useSlipStore } from '@/store/useSlipStore';
 import { Spinner } from '@/components/ui';
 import type { PlatformSlip } from '@/types';
@@ -59,7 +59,7 @@ function CodeBlock({ platform }: { platform: PlatformSlip }) {
         </div>
       ) : (
         <a
-          href={platform.affiliateUrl || platform.platformUrl}
+          href={platform.platformUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm font-semibold transition-opacity hover:opacity-80"
@@ -95,14 +95,12 @@ export function PlatformOutput() {
   });
 
   const hasAnyCodes = sorted.some((p) => p.bookingCode);
+  const showActivateBar =
+    !hasAnyCodes &&
+    parsedSlip?.sourcePlatform !== 'unknown';
 
   return (
     <div className="space-y-5">
-      {/* Best Odds Banner */}
-      {parsedSlip && !parsedSlip.isBookingCode && (
-        <BestOddsBar conversions={sorted} parsedSlip={parsedSlip} />
-      )}
-
       {/* Codes Grid */}
       <div className="rounded-2xl border border-ov-border bg-ov-surface overflow-hidden">
         <div className="px-5 py-4 border-b border-ov-border">
@@ -112,7 +110,7 @@ export function PlatformOutput() {
           <p className="text-ov-muted text-xs mt-0.5">
             {hasAnyCodes
               ? 'Tap Copy — paste into any bookmaker app to load the slip instantly'
-              : 'Open each platform and add these selections to get your booking code'}
+              : 'Open each platform and add these selections to generate your booking code'}
           </p>
         </div>
 
@@ -121,17 +119,10 @@ export function PlatformOutput() {
             <CodeBlock key={p.platform} platform={p} />
           ))}
         </div>
-
-        {!hasAnyCodes && parsedSlip?.isBookingCode && (
-          <div className="px-5 py-3 border-t border-ov-border bg-ov-elevated/40">
-            <p className="text-xs text-ov-faint leading-relaxed">
-              To auto-generate codes from a booking code, add your{' '}
-              <code className="bg-ov-card px-1 rounded text-ov-muted">CONVERTBET_API_KEY</code>{' '}
-              environment variable from convertbetcodes.com.
-            </p>
-          </div>
-        )}
       </div>
+
+      {/* Activate real codes prompt */}
+      {showActivateBar && <ActivateCodesBar />}
 
       {/* Toggle step-by-step guides */}
       <button
