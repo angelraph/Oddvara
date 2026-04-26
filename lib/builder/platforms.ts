@@ -17,6 +17,7 @@ interface PlatformConfig {
   searchUrl: string;
   canDeepLink: boolean;
   bookingCodeUrl?: string;
+  bookingCodeInstruction: string;
 }
 
 const PLATFORM_CONFIGS: PlatformConfig[] = [
@@ -28,6 +29,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     searchUrl: 'https://web.bet9ja.com/Sport#',
     canDeepLink: false,
     bookingCodeUrl: 'https://web.bet9ja.com/Sport#/booking/',
+    bookingCodeInstruction: 'After adding all selections, click "Book Bet" at the bottom of your betslip — your booking code will appear instantly.',
   },
   {
     id: 'sportybet',
@@ -37,6 +39,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     searchUrl: 'https://www.sportybet.com/ng/sport/football',
     canDeepLink: false,
     bookingCodeUrl: 'https://www.sportybet.com/ng/sharecode/',
+    bookingCodeInstruction: 'After adding all selections, tap the "Share" icon on your betslip — SportyBet will generate a booking code you can copy and share.',
   },
   {
     id: '1xbet',
@@ -46,6 +49,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     searchUrl: 'https://1xbet.ng/en/sport/football',
     canDeepLink: false,
     bookingCodeUrl: 'https://1xbet.ng/en/coupon/',
+    bookingCodeInstruction: 'After adding all selections, click "Save Coupon" in the coupon panel — 1xBet will generate a coupon code you can share or load on any device.',
   },
   {
     id: 'betking',
@@ -55,6 +59,7 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     searchUrl: 'https://www.betking.com/sports/s#/football/',
     canDeepLink: false,
     bookingCodeUrl: 'https://www.betking.com/booking-code',
+    bookingCodeInstruction: 'After adding all selections, click "Share Bet" on your betslip — BetKing will display a booking code your friends can use to load the same slip.',
   },
 ];
 
@@ -88,8 +93,6 @@ function getPlatformSelection(selectionNormalized: string, marketCode: MarketCod
 function buildBookingGuide(
   config: PlatformConfig,
   selections: ConvertedSelection[],
-  sourcePlatform: Platform,
-  sourceCode?: string
 ): BookingStep[] {
   const steps: BookingStep[] = [];
   let step = 1;
@@ -114,8 +117,8 @@ function buildBookingGuide(
     });
     steps.push({
       step: step++,
-      instruction: `Pick your selection`,
-      detail: `Click "${sel.platformSelection}" ${sel.original.odds > 0 ? `(odds around ${sel.original.odds.toFixed(2)})` : ''}`,
+      instruction: `Add your selection`,
+      detail: `Click "${sel.platformSelection}" ${sel.original.odds > 0 ? `(odds around ${sel.original.odds.toFixed(2)})` : ''} to add it to your betslip`,
     });
   } else {
     steps.push({
@@ -127,7 +130,7 @@ function buildBookingGuide(
     selections.forEach((sel, idx) => {
       steps.push({
         step: step++,
-        instruction: `Selection ${idx + 1}: ${sel.searchQuery}`,
+        instruction: `Add Selection ${idx + 1}: ${sel.searchQuery}`,
         detail: `Market: ${sel.platformMarket} → Pick: "${sel.platformSelection}" ${sel.original.odds > 0 ? `@ ~${sel.original.odds.toFixed(2)}` : ''}`,
       });
     });
@@ -135,8 +138,8 @@ function buildBookingGuide(
 
   steps.push({
     step: step++,
-    instruction: `Review & Place Bet`,
-    detail: `Check your betslip, enter your stake, and confirm`,
+    instruction: `Get your booking code`,
+    detail: config.bookingCodeInstruction,
   });
 
   return steps;
@@ -150,10 +153,12 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
         platform: platformId,
         platformName: platformId,
         logoColor: '#666',
+        platformUrl: '',
         selections: [],
         bookingGuide: [],
         overallConfidence: 0,
         canAutoLink: false,
+        bookingCodeInstruction: '',
       };
     }
 
@@ -182,18 +187,20 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
       1
     );
 
-    const bookingGuide = buildBookingGuide(config, convertedSelections, slip.sourcePlatform, slip.bookingCode);
+    const bookingGuide = buildBookingGuide(config, convertedSelections);
 
     return {
       platform: platformId,
       platformName: config.name,
       logoColor: config.logoColor,
+      platformUrl: config.baseUrl,
       selections: convertedSelections,
       deepLink: config.canDeepLink ? `${config.searchUrl}` : undefined,
       bookingGuide,
       overallConfidence,
       estimatedTotalOdds: parseFloat(estimatedTotalOdds.toFixed(2)),
       canAutoLink: config.canDeepLink,
+      bookingCodeInstruction: config.bookingCodeInstruction,
     };
   });
 }

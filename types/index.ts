@@ -61,12 +61,14 @@ export interface PlatformSlip {
   platform: Platform;
   platformName: string;
   logoColor: string;
+  platformUrl: string;
   selections: ConvertedSelection[];
   deepLink?: string;
   bookingGuide: BookingStep[];
   overallConfidence: number;
   estimatedTotalOdds?: number;
   canAutoLink: boolean;
+  bookingCodeInstruction: string;
 }
 
 export interface BookingStep {

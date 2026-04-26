@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, List, Search } from 'lucide-react';
+import { ExternalLink, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, List, Search, Ticket } from 'lucide-react';
 import { Card, Badge, Divider, ProgressBar, Button } from '@/components/ui';
 import type { PlatformSlip } from '@/types';
 
@@ -56,8 +56,30 @@ export function PlatformCard({ platform }: PlatformCardProps) {
 
       {expanded && (
         <>
+          {/* Booking Code CTA */}
+          <div
+            className="mx-5 mt-4 mb-1 rounded-xl px-4 py-3 flex items-start gap-3 border"
+            style={{ backgroundColor: platform.logoColor + '12', borderColor: platform.logoColor + '35' }}
+          >
+            <Ticket className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: platform.logoColor }} />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-ov-text">Get your {platform.platformName} booking code</p>
+              <p className="text-xs text-ov-muted mt-0.5 leading-relaxed">{platform.bookingCodeInstruction}</p>
+            </div>
+            <a
+              href={platform.platformUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <Button size="sm" leftIcon={<ExternalLink className="w-3 h-3" />}>
+                Open
+              </Button>
+            </a>
+          </div>
+
           {/* Confidence Bar */}
-          <div className="px-5 pb-4 border-t border-ov-border pt-3">
+          <div className="px-5 pb-4 border-t border-ov-border pt-3 mt-3">
             <ProgressBar
               value={platform.overallConfidence}
               label="Mapping confidence"
@@ -92,30 +114,29 @@ export function PlatformCard({ platform }: PlatformCardProps) {
           {/* Step-by-step Guide */}
           {view === 'guide' && (
             <div className="px-5 py-4 space-y-4">
-              {platform.bookingGuide.map((step) => (
-                <div key={step.step} className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-ov-elevated border border-ov-border text-ov-muted text-xs font-bold flex items-center justify-center">
-                    {step.step}
+              {platform.bookingGuide.map((step, i) => {
+                const isLastStep = i === platform.bookingGuide.length - 1;
+                return (
+                  <div key={step.step} className="flex gap-3">
+                    <div
+                      className={`flex-shrink-0 w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${
+                        isLastStep
+                          ? 'text-white'
+                          : 'bg-ov-elevated border border-ov-border text-ov-muted'
+                      }`}
+                      style={isLastStep ? { backgroundColor: platform.logoColor } : undefined}
+                    >
+                      {step.step}
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${isLastStep ? 'text-ov-text' : 'text-ov-text'}`}>
+                        {step.instruction}
+                      </p>
+                      {step.detail && <p className="text-ov-muted text-xs mt-0.5 leading-relaxed">{step.detail}</p>}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-ov-text text-sm font-medium">{step.instruction}</p>
-                    {step.detail && <p className="text-ov-muted text-xs mt-0.5 leading-relaxed">{step.detail}</p>}
-                  </div>
-                </div>
-              ))}
-
-              {platform.deepLink && (
-                <a
-                  href={platform.deepLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 flex"
-                >
-                  <Button variant="secondary" size="sm" leftIcon={<ExternalLink className="w-3.5 h-3.5" />}>
-                    Open {platform.platformName}
-                  </Button>
-                </a>
-              )}
+                );
+              })}
             </div>
           )}
 
