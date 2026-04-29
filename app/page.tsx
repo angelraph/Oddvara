@@ -15,18 +15,18 @@ import { useSlipStore } from '@/store/useSlipStore';
 const HOW_IT_WORKS = [
   {
     icon: <BookOpen className="w-5 h-5" />,
-    title: 'Paste your slip',
-    desc: 'Enter a booking code, paste your slip text, or upload a screenshot from any platform.',
+    title: 'Enter your bet',
+    desc: 'Paste a booking code from any platform, type your slip text, or upload a screenshot — Oddvara handles all formats.',
   },
   {
     icon: <Shuffle className="w-5 h-5" />,
-    title: 'Auto-parsed & normalised',
-    desc: 'Oddvara extracts teams, markets, odds, and selections — then maps them across platforms.',
+    title: 'Decoded & normalised',
+    desc: 'Teams, markets, odds and selections are extracted and mapped to equivalent bets on each platform.',
   },
   {
     icon: <Layers className="w-5 h-5" />,
-    title: 'Rebuild on any platform',
-    desc: 'Get a step-by-step guide to place the same bet on Bet9ja, SportyBet, 1xBet, or BetKing.',
+    title: 'Get codes for every platform',
+    desc: 'Copy a live booking code directly, or follow the step-by-step guide to place the same bet anywhere.',
   },
 ];
 
@@ -53,31 +53,33 @@ export default function Home() {
           <div className="max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ov-green/10 border border-ov-green/20 text-ov-green text-sm font-medium mb-6">
               <span className="w-2 h-2 rounded-full bg-ov-green animate-pulse-dot" />
-              Instant booking code converter
+              Bet9ja · SportyBet · 1xBet · BetKing
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-ov-text leading-tight mb-4">
-              Paste any bet code.
+              Convert any bet slip
               <br />
-              <span className="text-ov-green">Get codes for every platform.</span>
+              <span className="text-ov-green">across every platform.</span>
             </h1>
 
             <p className="text-ov-muted text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-8">
-              Paste a booking code or bet slip → Oddvara extracts every selection and outputs ready-to-use codes for
-              {' '}<strong className="text-ov-text">Bet9ja</strong>,{' '}
+              Enter a booking code or paste your slip — Oddvara decodes every selection and outputs
+              ready-to-use codes for{' '}
+              <strong className="text-ov-text">Bet9ja</strong>,{' '}
               <strong className="text-ov-text">SportyBet</strong>,{' '}
               <strong className="text-ov-text">1xBet</strong> &amp;{' '}
-              <strong className="text-ov-text">BetKing</strong>.
+              <strong className="text-ov-text">BetKing</strong>,
+              with a step-by-step guide for each.
             </p>
 
             {/* Output preview pills */}
             {!showResults && (
               <div className="flex flex-wrap justify-center gap-2 mb-8">
                 {[
-                  { label: 'Bet9ja', code: 'B9J-XXXX', color: '#009A44' },
-                  { label: 'SportyBet', code: 'SB-XXXX', color: '#E63946' },
-                  { label: '1xBet', code: '1XNG-XXXX', color: '#1E90FF' },
-                  { label: 'BetKing', code: 'BK-XXXX', color: '#FF6B00' },
+                  { label: 'Bet9ja',    code: 'B9J·XXXX',       color: '#009A44' },
+                  { label: 'SportyBet', code: 'SB·XXXXXX',      color: '#E63946' },
+                  { label: '1xBet',     code: '1XNG·XXXX·XXXX', color: '#1E90FF' },
+                  { label: 'BetKing',   code: 'BK·XXXXXX',      color: '#FF6B00' },
                 ].map((p) => (
                   <span
                     key={p.label}
@@ -154,8 +156,11 @@ export default function Home() {
         {!showResults && (
           <section id="how-it-works" className="border-t border-ov-border bg-ov-surface/50">
             <div className="max-w-4xl mx-auto px-4 py-20">
-              <p className="text-center text-ov-muted text-sm font-semibold uppercase tracking-widest mb-12">
+              <p className="text-center text-ov-muted text-sm font-semibold uppercase tracking-widest mb-3">
                 How it works
+              </p>
+              <p className="text-center text-ov-faint text-xs mb-12 max-w-sm mx-auto">
+                Three steps from any platform to every platform
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {HOW_IT_WORKS.map((item, i) => (

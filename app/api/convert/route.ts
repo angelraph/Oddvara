@@ -16,13 +16,12 @@ export async function POST(req: NextRequest) {
     }
 
     const conversions = convertSlip(slip, targetPlatforms);
-
-    // Attempt real booking code generation (requires CONVERTBET_API_KEY env var)
     const codes = await generateBookingCodes(slip, targetPlatforms);
 
     const conversionsWithCodes = conversions.map((c) => ({
       ...c,
-      bookingCode: codes[c.platform] ?? null,
+      bookingCode: codes[c.platform]?.code ?? null,
+      codeIsReal: codes[c.platform]?.isReal ?? false,
     }));
 
     return NextResponse.json<ConvertResponse>({ success: true, conversions: conversionsWithCodes });

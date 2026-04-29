@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { Hash, FileText, ImageIcon, ArrowRight, RotateCcw, ChevronDown } from 'lucide-react';
 import { cleanOcrText } from '@/lib/parser/ocrCleaner';
 import { Button, Spinner } from '@/components/ui';
@@ -56,6 +56,17 @@ export function InputPanel() {
   const [dragOver, setDragOver] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showSamples, setShowSamples] = useState(false);
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
+
+  // Auto-submit after OCR finishes
+  useEffect(() => {
+    if (ocrProgress === 100 && !autoSubmitted && inputValue.trim()) {
+      setAutoSubmitted(true);
+      const timer = setTimeout(() => parseSlip(inputValue, 'screenshot'), 900);
+      return () => clearTimeout(timer);
+    }
+    if (ocrProgress === 0) setAutoSubmitted(false);
+  }, [ocrProgress, inputValue, autoSubmitted, parseSlip]);
 
   const activeTab = TABS.find((t) => t.id === inputMethod) ?? TABS[1];
 
@@ -207,7 +218,7 @@ export function InputPanel() {
             rows={inputMethod === 'code' ? 2 : 8}
             className="w-full bg-transparent px-5 py-4 text-ov-text placeholder-ov-faint text-sm font-mono resize-none focus:outline-none leading-relaxed"
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.metaKey) handleSubmit();
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSubmit();
             }}
           />
         )}
@@ -265,7 +276,13 @@ export function InputPanel() {
       )}
 
       <p className="text-center text-xs text-ov-faint">
-        Press <kbd className="px-1.5 py-0.5 bg-ov-elevated rounded text-ov-muted">⌘ Enter</kbd> to parse
+        Press{' '}
+        <kbd className="px-1.5 py-0.5 bg-ov-elevated rounded text-ov-muted">⌘</kbd>
+        {' / '}
+        <kbd className="px-1.5 py-0.5 bg-ov-elevated rounded text-ov-muted">Ctrl</kbd>
+        {' + '}
+        <kbd className="px-1.5 py-0.5 bg-ov-elevated rounded text-ov-muted">Enter</kbd>
+        {' to convert'}
       </p>
     </div>
   );

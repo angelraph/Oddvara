@@ -20,6 +20,7 @@ interface PlatformConfig {
   bookingCodeUrl?: string;
   bookingCodeInstruction: string;
   oddsMultiplier: number;
+  buildMatchSearchUrl: (query: string) => string;
 }
 
 const PLATFORM_CONFIGS: PlatformConfig[] = [
@@ -28,48 +29,51 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     name: 'Bet9ja',
     logoColor: '#009A44',
     baseUrl: 'https://web.bet9ja.com',
-
     searchUrl: 'https://web.bet9ja.com/Sport#',
     canDeepLink: false,
     bookingCodeUrl: 'https://web.bet9ja.com/Sport#/booking/',
     bookingCodeInstruction: 'After adding all selections, click "Book Bet" at the bottom of your betslip — your booking code will appear instantly.',
     oddsMultiplier: 1.00,
+    buildMatchSearchUrl: () => 'https://web.bet9ja.com/Sport#',
   },
   {
     id: 'sportybet',
     name: 'SportyBet',
     logoColor: '#E63946',
     baseUrl: 'https://www.sportybet.com/ng',
-
     searchUrl: 'https://www.sportybet.com/ng/sport/football',
     canDeepLink: false,
     bookingCodeUrl: 'https://www.sportybet.com/ng/sharecode/',
     bookingCodeInstruction: 'After adding all selections, tap the "Share" icon on your betslip — SportyBet will generate a booking code you can copy and share.',
     oddsMultiplier: 0.98,
+    buildMatchSearchUrl: (q) =>
+      `https://www.sportybet.com/ng/sport/football?keyword=${encodeURIComponent(q)}`,
   },
   {
     id: '1xbet',
     name: '1xBet',
     logoColor: '#1E90FF',
     baseUrl: 'https://1xbet.ng',
-
     searchUrl: 'https://1xbet.ng/en/sport/football',
     canDeepLink: false,
     bookingCodeUrl: 'https://1xbet.ng/en/coupon/',
     bookingCodeInstruction: 'After adding all selections, click "Save Coupon" in the coupon panel — 1xBet will generate a coupon code you can share or load on any device.',
     oddsMultiplier: 1.04,
+    buildMatchSearchUrl: (q) =>
+      `https://1xbet.ng/en/search/?query=${encodeURIComponent(q)}`,
   },
   {
     id: 'betking',
     name: 'BetKing',
     logoColor: '#FF6B00',
     baseUrl: 'https://www.betking.com',
-
     searchUrl: 'https://www.betking.com/sports/s#/football/',
     canDeepLink: false,
     bookingCodeUrl: 'https://www.betking.com/booking-code',
     bookingCodeInstruction: 'After adding all selections, click "Share Bet" on your betslip — BetKing will display a booking code your friends can use to load the same slip.',
     oddsMultiplier: 1.01,
+    buildMatchSearchUrl: (q) =>
+      `https://www.betking.com/sports?search=${encodeURIComponent(q)}`,
   },
 ];
 
@@ -170,6 +174,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
         canAutoLink: false,
         bookingCodeInstruction: '',
         bookingCode: null,
+        codeIsReal: false,
       };
     }
 
@@ -177,6 +182,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
       const platformMarket = getPlatformMarketName(sel.marketCode, platformId);
       const platformSelection = getPlatformSelection(sel.selectionNormalized, sel.marketCode, platformId);
       const searchQuery = buildSearchQuery(sel);
+      const matchSearchUrl = config.buildMatchSearchUrl(searchQuery);
 
       return {
         original: sel,
@@ -184,6 +190,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
         platformSelection,
         platformOdds: sel.odds,
         searchQuery,
+        matchSearchUrl,
         confidence: sel.confidence,
       };
     });
@@ -217,6 +224,7 @@ export function convertSlip(slip: ParsedSlip, targetPlatforms: Platform[]): Plat
       canAutoLink: config.canDeepLink,
       bookingCodeInstruction: config.bookingCodeInstruction,
       bookingCode: null,
+      codeIsReal: false,
     };
   });
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Clock, TrendingUp, Bookmark, BookmarkCheck, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, Clock, Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Trophy } from 'lucide-react';
 import { Card, Badge, Divider } from '@/components/ui';
 import { useSlipStore } from '@/store/useSlipStore';
 import type { ParsedSlip, BetSelection } from '@/types';
@@ -25,6 +25,12 @@ function SelectionRow({ sel, index }: { sel: BetSelection; index: number }) {
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
               <Badge variant="neutral">{sel.market}</Badge>
               <Badge variant="purple">{sel.selection}</Badge>
+              {sel.league && (
+                <span className="inline-flex items-center gap-1 text-xs text-ov-muted">
+                  <Trophy className="w-3 h-3" />
+                  {sel.league}
+                </span>
+              )}
               {sel.matchTime && (
                 <span className="inline-flex items-center gap-1 text-xs text-ov-muted">
                   <Clock className="w-3 h-3" />

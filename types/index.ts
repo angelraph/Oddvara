@@ -54,6 +54,7 @@ export interface ConvertedSelection {
   platformSelection: string;
   platformOdds?: number;
   searchQuery: string;
+  matchSearchUrl?: string;
   confidence: number;
 }
 
@@ -71,6 +72,7 @@ export interface PlatformSlip {
   canAutoLink: boolean;
   bookingCodeInstruction: string;
   bookingCode: string | null;
+  codeIsReal: boolean;
 }
 
 export interface BookingStep {
