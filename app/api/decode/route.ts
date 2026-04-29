@@ -214,6 +214,52 @@ async function decodeBetKing(code: string): Promise<DecodeResult> {
   return { success: false, error: 'BetKing decode unavailable' };
 }
 
+// ── Stake.com ─────────────────────────────────────────────────────────────
+
+async function decodeStake(raw: string): Promise<DecodeResult> {
+  // Extract the bet ID whether we received a full URL or just the ID
+  let betId = raw.trim();
+  const urlMatch = raw.match(/betId=([A-Za-z0-9_-]+)/i) ?? raw.match(/shares\/([A-Za-z0-9_-]+)/i);
+  if (urlMatch) betId = urlMatch[1];
+
+  const endpoints = [
+    `https://stake.com/sports/shares/${encodeURIComponent(betId)}`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          Referer: 'https://stake.com/',
+          Accept: 'application/json',
+          'x-requested-with': 'XMLHttpRequest',
+        },
+        next: { revalidate: 0 },
+      });
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      const events: unknown[] =
+        data?.bets ??
+        data?.outcomes ??
+        data?.selections ??
+        data?.data?.bets ??
+        [];
+
+      if (!events.length) continue;
+
+      const selections = events.map((e) => makeSelection(e as Record<string, unknown>));
+      const totalOdds = selections.reduce((acc, s) => acc * (s.odds || 1), 1);
+      return { success: true, selections, totalOdds: parseFloat(totalOdds.toFixed(2)) };
+    } catch {
+      continue;
+    }
+  }
+
+  return { success: false, error: 'Stake decode unavailable' };
+}
+
 // ── Router ─────────────────────────────────────────────────────────────────
 
 const DECODERS: Partial<Record<Platform, (code: string) => Promise<DecodeResult>>> = {
@@ -221,6 +267,7 @@ const DECODERS: Partial<Record<Platform, (code: string) => Promise<DecodeResult>
   bet9ja:    decodeBet9ja,
   '1xbet':   decode1xBet,
   betking:   decodeBetKing,
+  stake:     decodeStake,
 };
 
 export async function POST(req: NextRequest) {

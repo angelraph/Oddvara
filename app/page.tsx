@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { InputPanel } from '@/components/input/InputPanel';
 import { BetSlipCard } from '@/components/slip/BetSlipCard';
 import { PlatformOutput } from '@/components/platform/PlatformOutput';
+import { PlatformPicker } from '@/components/platform/PlatformPicker';
 import { OddsTable } from '@/components/compare/OddsTable';
 import { ShareButton } from '@/components/share/ShareButton';
 import { SlipLoader } from '@/components/share/SlipLoader';
@@ -30,8 +31,16 @@ const HOW_IT_WORKS = [
   },
 ];
 
+const ALL_PLATFORMS = ['bet9ja', 'sportybet', '1xbet', 'betking', 'stake'] as const;
+const PLATFORM_COLORS: Record<string, string> = {
+  bet9ja: '#009A44', sportybet: '#E63946', '1xbet': '#1E90FF', betking: '#FF6B00', stake: '#00d32b',
+};
+const PLATFORM_NAMES: Record<string, string> = {
+  bet9ja: 'Bet9ja', sportybet: 'SportyBet', '1xbet': '1xBet', betking: 'BetKing', stake: 'Stake',
+};
+
 export default function Home() {
-  const { parsedSlip, conversions, isLoading, isParsing, isConverting, error } = useSlipStore();
+  const { parsedSlip, conversions, selectedPlatform, isLoading, isParsing, isConverting, error, convertToTarget } = useSlipStore();
   const showResults = parsedSlip || isLoading;
 
   return (
@@ -53,7 +62,7 @@ export default function Home() {
           <div className="max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ov-green/10 border border-ov-green/20 text-ov-green text-sm font-medium mb-6">
               <span className="w-2 h-2 rounded-full bg-ov-green animate-pulse-dot" />
-              Bet9ja · SportyBet · 1xBet · BetKing
+              Bet9ja · SportyBet · 1xBet · BetKing · Stake
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-ov-text leading-tight mb-4">
@@ -67,8 +76,9 @@ export default function Home() {
               ready-to-use codes for{' '}
               <strong className="text-ov-text">Bet9ja</strong>,{' '}
               <strong className="text-ov-text">SportyBet</strong>,{' '}
-              <strong className="text-ov-text">1xBet</strong> &amp;{' '}
-              <strong className="text-ov-text">BetKing</strong>,
+              <strong className="text-ov-text">1xBet</strong>,{' '}
+              <strong className="text-ov-text">BetKing</strong> &amp;{' '}
+              <strong className="text-ov-text">Stake</strong>,
               with a step-by-step guide for each.
             </p>
 
@@ -80,6 +90,7 @@ export default function Home() {
                   { label: 'SportyBet', code: 'SB·XXXXXX',      color: '#E63946' },
                   { label: '1xBet',     code: '1XNG·XXXX·XXXX', color: '#1E90FF' },
                   { label: 'BetKing',   code: 'BK·XXXXXX',      color: '#FF6B00' },
+                  { label: 'Stake',     code: 'Share·Link',      color: '#00d32b' },
                 ].map((p) => (
                   <span
                     key={p.label}
@@ -121,14 +132,25 @@ export default function Home() {
             </div>
           )}
 
-          {/* Directional banner — shown for any parsed slip with a known source */}
+          {/* Directional banner */}
           {parsedSlip && parsedSlip.sourcePlatform !== 'unknown' && (
             <div className="flex items-center gap-2 text-xs text-ov-muted bg-ov-elevated border border-ov-border rounded-xl px-4 py-2.5 animate-fade-in">
               <ArrowRight className="w-3.5 h-3.5 text-ov-green flex-shrink-0" />
               <span>
-                Converting from{' '}
-                <span className="text-ov-text font-semibold capitalize">{parsedSlip.sourcePlatform}</span>
-                {' '}→ all other platforms
+                {conversions && selectedPlatform ? (
+                  <>
+                    Converted from{' '}
+                    <span className="text-ov-text font-semibold capitalize">{parsedSlip.sourcePlatform}</span>
+                    {' → '}
+                    <span className="text-ov-green font-semibold">{PLATFORM_NAMES[selectedPlatform] ?? selectedPlatform}</span>
+                  </>
+                ) : (
+                  <>
+                    Decoded from{' '}
+                    <span className="text-ov-text font-semibold capitalize">{parsedSlip.sourcePlatform}</span>
+                    {' — pick your target platform below'}
+                  </>
+                )}
               </span>
             </div>
           )}
@@ -143,13 +165,49 @@ export default function Home() {
             </div>
           )}
 
+          {/* Platform picker — shown after parse, before conversion */}
+          {parsedSlip && !conversions && !isConverting && (
+            <PlatformPicker />
+          )}
+
+          {/* Converting spinner */}
+          {isConverting && (
+            <div className="flex flex-col items-center gap-4 py-10 animate-fade-in">
+              <Spinner size="lg" />
+              <p className="text-ov-muted text-sm">Converting...</p>
+            </div>
+          )}
+
           {/* Odds Comparison Table */}
           {parsedSlip && !parsedSlip.isBookingCode && conversions && conversions.length > 0 && (
             <OddsTable slip={parsedSlip} conversions={conversions} />
           )}
 
-          {/* Platform output — shown for all conversions including booking codes */}
-          {(conversions || isConverting) && <PlatformOutput />}
+          {/* Platform output */}
+          {conversions && !isConverting && <PlatformOutput />}
+
+          {/* Try another platform row */}
+          {conversions && !isConverting && parsedSlip && (
+            <div className="rounded-2xl border border-ov-border bg-ov-surface p-4">
+              <p className="text-xs text-ov-muted font-semibold mb-3">Try another platform</p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_PLATFORMS
+                  .filter((p) => p !== parsedSlip.sourcePlatform && p !== selectedPlatform)
+                  .map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => convertToTarget(p)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all hover:opacity-80"
+                      style={{ borderColor: PLATFORM_COLORS[p] + '40', color: PLATFORM_COLORS[p] }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: PLATFORM_COLORS[p] }} />
+                      {PLATFORM_NAMES[p]}
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+          )}
         </section>
 
         {/* ── How It Works ───────────────────────────────── */}

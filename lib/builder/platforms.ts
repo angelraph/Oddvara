@@ -75,6 +75,18 @@ const PLATFORM_CONFIGS: PlatformConfig[] = [
     buildMatchSearchUrl: (q) =>
       `https://www.betking.com/sports?search=${encodeURIComponent(q)}`,
   },
+  {
+    id: 'stake',
+    name: 'Stake',
+    logoColor: '#00d32b',
+    baseUrl: 'https://stake.com',
+    searchUrl: 'https://stake.com/sports/soccer',
+    canDeepLink: false,
+    bookingCodeInstruction: 'After adding all selections, use the "Share Bet" option on your betslip to generate a shareable link.',
+    oddsMultiplier: 1.02,
+    buildMatchSearchUrl: (q) =>
+      `https://stake.com/sports/soccer?search=${encodeURIComponent(q)}`,
+  },
 ];
 
 function getPlatformMarketName(marketCode: MarketCode, platform: Platform): string {
@@ -98,6 +110,7 @@ function getPlatformSelection(selectionNormalized: string, marketCode: MarketCod
     sportybet: { '1': '1', 'X': 'X', '2': '2', 'Yes': 'Yes', 'No': 'No', 'Over': 'Over', 'Under': 'Under', 'Home': 'Home Win', 'Away': 'Away Win', 'Draw': 'Draw' },
     '1xbet': { '1': '1', 'X': 'X', '2': '2', 'Yes': 'Yes', 'No': 'No', 'Over': 'Over', 'Under': 'Under', 'Home': '1', 'Away': '2', 'Draw': 'X' },
     betking: { '1': '1', 'X': 'X', '2': '2', 'Yes': 'GG', 'No': 'NG', 'Over': 'Over', 'Under': 'Under', 'Home': '1', 'Away': '2', 'Draw': 'X' },
+    stake:   { '1': '1', 'X': 'Draw', '2': '2', 'Yes': 'Yes', 'No': 'No', 'Over': 'Over', 'Under': 'Under', 'Home': '1', 'Away': '2', 'Draw': 'Draw' },
     unknown: {},
   };
 

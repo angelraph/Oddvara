@@ -29,6 +29,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Full Time Result',
       '1xbet': 'Match Result',
       betking: '1X2',
+      stake: 'Match Result',
     },
   },
 
@@ -48,6 +49,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Goal Lines',
       '1xbet': 'Total',
       betking: 'Over/Under',
+      stake: 'Total Goals',
     },
   },
 
@@ -67,6 +69,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Both Teams to Score',
       '1xbet': 'Both Teams To Score',
       betking: 'GG/NG',
+      stake: 'Both Teams to Score',
     },
   },
 
@@ -87,6 +90,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Double Chance',
       '1xbet': 'Double Chance',
       betking: 'Double Chance',
+      stake: 'Double Chance',
     },
   },
 
@@ -104,6 +108,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Draw No Bet',
       '1xbet': 'Draw No Bet',
       betking: 'Draw No Bet',
+      stake: 'Draw No Bet',
     },
   },
 
@@ -116,6 +121,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Correct Score',
       '1xbet': 'Exact Score',
       betking: 'Correct Score',
+      stake: 'Correct Score',
     },
   },
 
@@ -135,6 +141,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'First Half Result',
       '1xbet': 'Halftime',
       betking: '1st Half Result',
+      stake: 'Half Time Result',
     },
   },
 
@@ -150,6 +157,7 @@ export const MARKETS: Record<string, MarketInfo> = {
       sportybet: 'Asian Handicap',
       '1xbet': 'Asian Handicap',
       betking: 'Asian Handicap',
+      stake: 'Asian Handicap',
     },
   },
 };

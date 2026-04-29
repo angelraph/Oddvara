@@ -1,4 +1,4 @@
-export type Platform = 'bet9ja' | 'sportybet' | '1xbet' | 'betking' | 'unknown';
+export type Platform = 'bet9ja' | 'sportybet' | '1xbet' | 'betking' | 'stake' | 'unknown';
 export type BetType = 'single' | 'accumulator' | 'system';
 export type OddsFormat = 'decimal' | 'fractional' | 'american';
 export type InputMethod = 'code' | 'text' | 'screenshot';

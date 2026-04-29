@@ -19,6 +19,8 @@ export const CODE_PATTERNS: Partial<Record<Platform, RegExp>> = {
   bet9ja: /^(B9J|BJ)[A-Z0-9]{4,12}$|^\d{7,12}$/i,
   '1xbet': /^(1X|1XNG[-]?)[A-Z0-9\-]{3,20}$/i,
   betking: /^BK[A-Z0-9]{4,12}$/i,
+  // Stake.com: share URLs or cuid-style IDs (25 chars, lowercase alphanumeric)
+  stake: /stake\.com|^[a-z0-9]{20,30}$/,
 };
 
 export const PLATFORM_MARKERS: Record<string, string[]> = {
@@ -26,6 +28,7 @@ export const PLATFORM_MARKERS: Record<string, string[]> = {
   sportybet: ['sportybet', 'sporty bet', 'sporty'],
   '1xbet': ['1xbet', '1x bet', '1xng', '1x', 'xbet'],
   betking: ['betking', 'bet king'],
+  stake: ['stake.com', 'stake', 'stake sports'],
 };
 
 export function detectPlatformFromText(text: string): string {

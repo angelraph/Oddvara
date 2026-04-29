@@ -12,6 +12,7 @@ interface SlipStore {
   isConverting: boolean;
   parsedSlip: ParsedSlip | null;
   conversions: PlatformSlip[] | null;
+  selectedPlatform: Platform | null;
   error: string | null;
   savedSlips: ParsedSlip[];
   ocrProgress: number;
@@ -20,13 +21,14 @@ interface SlipStore {
   setInputValue: (value: string) => void;
   setOcrProgress: (progress: number) => void;
   parseSlip: (input: string, method: InputMethod) => Promise<void>;
+  convertToTarget: (platform: Platform) => Promise<void>;
   restoreFromSharedSlip: (slip: ParsedSlip) => Promise<void>;
   reset: () => void;
   saveCurrentSlip: () => void;
   deleteSavedSlip: (id: string) => void;
 }
 
-const ALL_PLATFORMS: Platform[] = ['bet9ja', 'sportybet', '1xbet', 'betking'];
+const ALL_PLATFORMS: Platform[] = ['bet9ja', 'sportybet', '1xbet', 'betking', 'stake'];
 
 async function runConversion(slip: ParsedSlip, targetPlatforms: Platform[]): Promise<PlatformSlip[]> {
   const res = await fetch('/api/convert', {
@@ -39,7 +41,6 @@ async function runConversion(slip: ParsedSlip, targetPlatforms: Platform[]): Pro
   return data.conversions;
 }
 
-// Tries to fetch real selections from the platform's API (e.g. SportyBet sharecode endpoint)
 async function tryDecodeBookingCode(
   platform: Platform,
   code: string
@@ -70,6 +71,7 @@ export const useSlipStore = create<SlipStore>()(
       isConverting: false,
       parsedSlip: null,
       conversions: null,
+      selectedPlatform: null,
       error: null,
       savedSlips: [],
       ocrProgress: 0,
@@ -84,7 +86,14 @@ export const useSlipStore = create<SlipStore>()(
           return;
         }
 
-        set({ isLoading: true, isParsing: true, error: null, parsedSlip: null, conversions: null });
+        set({
+          isLoading: true,
+          isParsing: true,
+          error: null,
+          parsedSlip: null,
+          conversions: null,
+          selectedPlatform: null,
+        });
 
         try {
           const parseRes = await fetch('/api/parse', {
@@ -105,7 +114,6 @@ export const useSlipStore = create<SlipStore>()(
           if (slip.isBookingCode && slip.sourcePlatform !== 'unknown' && slip.bookingCode) {
             const decoded = await tryDecodeBookingCode(slip.sourcePlatform, slip.bookingCode);
             if (decoded) {
-              // Upgrade the slip with real selections — treat it as a parsed slip
               slip = {
                 ...slip,
                 isBookingCode: false,
@@ -113,23 +121,10 @@ export const useSlipStore = create<SlipStore>()(
                 totalOdds: decoded.totalOdds,
               };
             }
-            // If decode fails, slip remains { isBookingCode: true, selections: [] }
-            // The convert API will still try code-to-code via generateBookingCodes
           }
 
-          set({ parsedSlip: slip, isParsing: false, isConverting: true });
-
-          // Always run conversion — for booking codes this triggers generateBookingCodes
-          // For decoded slips this converts real selections
-          const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);
-
-          if (targets.length === 0) {
-            set({ isConverting: false, isLoading: false });
-            return;
-          }
-
-          const conversions = await runConversion(slip, targets);
-          set({ conversions, isConverting: false, isLoading: false });
+          // Parsing done — show platform picker, no auto-convert
+          set({ parsedSlip: slip, isParsing: false, isLoading: false, isConverting: false });
         } catch {
           set({
             error: 'Network error. Please check your connection and try again.',
@@ -140,10 +135,28 @@ export const useSlipStore = create<SlipStore>()(
         }
       },
 
-      restoreFromSharedSlip: async (slip) => {
-        set({ parsedSlip: slip, isConverting: true, error: null, conversions: null });
+      convertToTarget: async (platform) => {
+        const slip = get().parsedSlip;
+        if (!slip) return;
+
+        set({ isConverting: true, isLoading: true, selectedPlatform: platform, conversions: null });
+
         try {
-          const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);
+          const conversions = await runConversion(slip, [platform]);
+          set({ conversions, isConverting: false, isLoading: false });
+        } catch {
+          set({
+            error: 'Conversion failed. Please try again.',
+            isConverting: false,
+            isLoading: false,
+          });
+        }
+      },
+
+      restoreFromSharedSlip: async (slip) => {
+        const targets = ALL_PLATFORMS.filter((p) => p !== slip.sourcePlatform);
+        set({ parsedSlip: slip, isConverting: true, error: null, conversions: null, selectedPlatform: null });
+        try {
           const conversions = await runConversion(slip, targets);
           set({ conversions, isConverting: false });
         } catch {
@@ -156,6 +169,7 @@ export const useSlipStore = create<SlipStore>()(
           inputValue: '',
           parsedSlip: null,
           conversions: null,
+          selectedPlatform: null,
           error: null,
           isLoading: false,
           isParsing: false,
