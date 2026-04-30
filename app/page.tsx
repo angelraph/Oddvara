@@ -165,6 +165,32 @@ export default function Home() {
             </div>
           )}
 
+          {/* Booking code notice — shown when selections couldn't be decoded from the source platform.
+              Users must see what they're working with before picking a target. */}
+          {parsedSlip && parsedSlip.isBookingCode && !conversions && !isConverting && (
+            <div className="rounded-2xl border border-ov-border bg-ov-elevated px-5 py-4 space-y-2 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-ov-muted uppercase tracking-wider">
+                  {parsedSlip.sourcePlatform !== 'unknown'
+                    ? (PLATFORM_NAMES[parsedSlip.sourcePlatform] ?? parsedSlip.sourcePlatform)
+                    : 'Unknown platform'}{' '}
+                  booking code
+                </span>
+              </div>
+              {parsedSlip.bookingCode && (
+                <p className="font-mono text-lg font-bold text-ov-text tracking-widest">
+                  {parsedSlip.bookingCode}
+                </p>
+              )}
+              <p className="text-xs text-ov-muted leading-relaxed">
+                We couldn&apos;t retrieve the individual selections for this code. Choose a target
+                platform below — we&apos;ll generate a step-by-step guide to help you recreate the
+                same bet. No booking code will be generated; you&apos;ll need to add the selections
+                manually.
+              </p>
+            </div>
+          )}
+
           {/* Platform picker — shown after parse, before conversion */}
           {parsedSlip && !conversions && !isConverting && (
             <PlatformPicker />
